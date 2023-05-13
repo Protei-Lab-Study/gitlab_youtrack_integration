@@ -1,18 +1,23 @@
 image: docker:latest
 
 variables:
+  #путь к бинарнику
   dirName: "./SayNoToDesignerExample/bin/Debug/net6.0-windows/1LAB_SECOND_PART_RUNTIME.exe"
+  
+  #папка артефактов
   dirNameArtif: "./artifacts/"
+  
+  #скрипт на bash
   dirscript: "./main/test.sh"
 
 build_job1:
   variables:
+    #путь для скачивания артефактов
     testPath: "https://gitlab.com/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/browse"
   stage: build
   script:
     # тут переменная с путем сохраняется чтоб ее можно было использовать в другой job'е
     - echo "savePath=$testPath" >> build.env
-    - echo "$savePath"
     - mkdir $dirNameArtif
     - cp $dirName $dirNameArtif 
   artifacts:
@@ -24,12 +29,14 @@ build_job1:
 deploy_job1:
   stage: deploy
   script:
+    #обновления пакетов bash, curl & jq в контейнер
     - apk update
     - apk add bash
     - apk add curl
     - apk add jq
-    - echo "$savePath"
+    #права на исполнения скрипта
     - chmod +x "$dirscript"
+    #передача ссылки на скачивание артефактов в качестве параметра для скрипта
     - "$dirscript $savePath"
   dependencies:
     - build_job1
